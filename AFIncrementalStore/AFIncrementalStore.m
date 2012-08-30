@@ -299,6 +299,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                                          withContext:(NSManagedObjectContext *)context
                                                error:(NSError *__autoreleasing *)error
 {
+    //build the fetch request to query the values from the backing store
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:[[objectID entity] name]];
     fetchRequest.resultType = NSDictionaryResultType;
     fetchRequest.fetchLimit = 1;
@@ -306,12 +307,21 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     fetchRequest.propertiesToFetch = [[[NSEntityDescription entityForName:fetchRequest.entityName inManagedObjectContext:context] attributesByName] allKeys];
     fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K = %@", kAFIncrementalStoreResourceIdentifierAttributeName, [self referenceObjectForObjectID:objectID]];
     
+    //fetch from the backing store
     NSArray *results = [[self backingManagedObjectContext] executeFetchRequest:fetchRequest error:error];
-    NSDictionary *attributeValues = [results lastObject] ?: [NSDictionary dictionary];
+    if(nil == results) {
+      NSLog(@"Error: Failed to fetch values from backingContext for object with id: '%@'. Error: %@", objectID, (error) ? *error : nil);
+    }
 
-    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID withValues:attributeValues version:1];
-    
-    if ([self.HTTPClient respondsToSelector:@selector(shouldFetchRemoteAttributeValuesForObjectWithID:inManagedObjectContext:)] && [self.HTTPClient shouldFetchRemoteAttributeValuesForObjectWithID:objectID inManagedObjectContext:context]) {
+    //build NSIncrementalStoreNode that we need to return from the fetched data
+    NSDictionary *attributeValues = [results lastObject] ?: [NSDictionary dictionary];
+    NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID
+                                                                         withValues:attributeValues
+                                                                            version:1];
+    //optionally ask the delegate if we should queue an update of the values
+    //which will be stored to the backingContext
+    if ([self.HTTPClient respondsToSelector:@selector(shouldFetchRemoteAttributeValuesForObjectWithID:inManagedObjectContext:)] &&
+        [self.HTTPClient shouldFetchRemoteAttributeValuesForObjectWithID:objectID inManagedObjectContext:context]) {
         if (attributeValues) {
             NSManagedObjectContext *backingManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
             backingManagedObjectContext.parentContext = context;
