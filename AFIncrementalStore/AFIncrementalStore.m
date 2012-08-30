@@ -39,9 +39,6 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
 
 @implementation AFIncrementalStore {
 @private
-    NSCache *_propertyValuesCache;
-    NSCache *_relationshipsCache;
-    NSCache *_backingObjectIDByObjectID;
     NSMutableDictionary *_registeredObjectIDsByResourceIdentifier;
     NSPersistentStoreCoordinator *_backingPersistentStoreCoordinator;
     NSManagedObjectContext *_backingManagedObjectContext;
@@ -54,15 +51,12 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
 }
 
 - (BOOL)loadMetadata:(NSError *__autoreleasing *)error {
-    if (!_propertyValuesCache) {
+    if(nil == _backingPersistentStoreCoordinator) {
         NSMutableDictionary *mutableMetadata = [NSMutableDictionary dictionary];
         [mutableMetadata setValue:[[NSProcessInfo processInfo] globallyUniqueString] forKey:NSStoreUUIDKey];
         [mutableMetadata setValue:[self type] forKey:NSStoreTypeKey];
         [self setMetadata:mutableMetadata];
         
-        _propertyValuesCache = [[NSCache alloc] init];
-        _relationshipsCache = [[NSCache alloc] init];
-        _backingObjectIDByObjectID = [[NSCache alloc] init];
         _registeredObjectIDsByResourceIdentifier = [[NSMutableDictionary alloc] init];
         
         NSManagedObjectModel *model = [self.persistentStoreCoordinator.managedObjectModel copy];
