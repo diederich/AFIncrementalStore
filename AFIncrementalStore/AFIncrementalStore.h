@@ -53,6 +53,16 @@ extern NSString * AFIncrementalStoreUnimplementedMethodException;
                                          ofEntity:(NSEntityDescription *)entity
                                      fromResponse:(NSHTTPURLResponse *)response;
 
+/** returns a cleaned up version of the remote response dictionary (@param representation)
+ which only holds key/value pairs suitable for setting on the NSManagedObject which
+ is about to be created/updated from @param response
+ 
+ @param representation key/value pairs returned from the remote service
+ @param entity the entity we're talking about
+ @param response the response that generated @param representation
+ 
+ @return NSDictionary which values will be set on the resulting NSManagedObject
+ */
 - (NSDictionary *)attributesForRepresentation:(NSDictionary *)representation
                                      ofEntity:(NSEntityDescription *)entity
                                  fromResponse:(NSHTTPURLResponse *)response;

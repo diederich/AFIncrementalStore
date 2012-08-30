@@ -119,6 +119,8 @@ static NSString * AFPluralizedString(NSString *string) {
                                  fromResponse:(NSHTTPURLResponse *)response
 {
     NSMutableDictionary *mutableAttributes = [representation mutableCopy];
+
+    //remove all key/value pairs which are not present in the entity
     @autoreleasepool {
         NSMutableSet *mutableKeys = [NSMutableSet setWithArray:[representation allKeys]];
         [mutableKeys minusSet:[NSSet setWithArray:[[entity propertiesByName] allKeys]]];
