@@ -133,6 +133,20 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     return [results lastObject];
 }
 
+- (NSManagedObjectContext*) automergingChildContextFromParentContext:(NSManagedObjectContext*) context {
+  NSManagedObjectContext* childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+  childContext.parentContext = context;
+  childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+  
+  [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification
+                                                    object:childContext
+                                                     queue:[NSOperationQueue mainQueue]
+                                                usingBlock:^(NSNotification *note) {
+                                                  [context mergeChangesFromContextDidSaveNotification:note];
+                                                }];
+  return childContext;
+}
+
 - (id)executeRequest:(NSPersistentStoreRequest *)persistentStoreRequest
          withContext:(NSManagedObjectContext *)context
                error:(NSError *__autoreleasing *)error
@@ -152,13 +166,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                     representations = [NSArray arrayWithObject:representationOrArrayOfRepresentations];
                 }
                 
-                NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-                childContext.parentContext = context;
-                childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
-                
-                [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:childContext queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-                    [context mergeChangesFromContextDidSaveNotification:note];
-                }];
+                NSManagedObjectContext *childContext = [self automergingChildContextFromParentContext:context];
 
                 NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
                 [childContext performBlock:^{
@@ -361,15 +369,9 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
         NSURLRequest *request = [self.HTTPClient requestWithMethod:@"GET" pathForRelationship:relationship forObjectWithID:objectID withContext:context];
         
         if ([request URL] && ![[context existingObjectWithID:objectID error:nil] hasChanges]) {
-            NSManagedObjectContext *childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-            childContext.parentContext = context;
-            childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
             
             NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
-            
-            [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification object:childContext queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-                [context mergeChangesFromContextDidSaveNotification:note];
-            }];
+            NSManagedObjectContext *childContext = [self automergingChildContextFromParentContext:context];
             
             AFHTTPRequestOperation *operation = [self.HTTPClient HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
                 id representationOrArrayOfRepresentations = [self.HTTPClient representationOrArrayOfRepresentationsFromResponseObject:responseObject];
