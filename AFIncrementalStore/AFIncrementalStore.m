@@ -53,10 +53,6 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     @throw([NSException exceptionWithName:AFIncrementalStoreUnimplementedMethodException reason:NSLocalizedString(@"Unimplemented method: +type. Must be overridden in a subclass", nil) userInfo:nil]);
 }
 
-+ (NSManagedObjectModel *)model {
-    @throw([NSException exceptionWithName:AFIncrementalStoreUnimplementedMethodException reason:NSLocalizedString(@"Unimplemented method: +model. Must be overridden in a subclass", nil) userInfo:nil]);
-}
-
 - (BOOL)loadMetadata:(NSError *__autoreleasing *)error {
     if (!_propertyValuesCache) {
         NSMutableDictionary *mutableMetadata = [NSMutableDictionary dictionary];

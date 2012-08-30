@@ -35,8 +35,6 @@ extern NSString * AFIncrementalStoreUnimplementedMethodException;
 
 + (NSString *)type;
 
-+ (NSManagedObjectModel *)model;
-
 @end
 
 #pragma mark -
