@@ -61,7 +61,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     if (!_propertyValuesCache) {
         NSMutableDictionary *mutableMetadata = [NSMutableDictionary dictionary];
         [mutableMetadata setValue:[[NSProcessInfo processInfo] globallyUniqueString] forKey:NSStoreUUIDKey];
-        [mutableMetadata setValue:NSStringFromClass([self class]) forKey:NSStoreTypeKey];
+        [mutableMetadata setValue:[self type] forKey:NSStoreTypeKey];
         [self setMetadata:mutableMetadata];
         
         _propertyValuesCache = [[NSCache alloc] init];
