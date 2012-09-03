@@ -464,4 +464,12 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     }    
 }
 
+- (NSArray*)obtainPermanentIDsForObjects:(NSArray*)array error:(NSError **)error {
+  NSMutableArray* mutableArray = [NSMutableArray arrayWithCapacity:array.count];
+  for(NSManagedObject* object in array) {
+    [mutableArray addObject:object.objectID];
+  }
+  return mutableArray;
+}
+
 @end
