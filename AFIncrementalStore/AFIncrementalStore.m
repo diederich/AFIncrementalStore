@@ -166,17 +166,32 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                         NSDictionary *attributes = [self.HTTPClient attributesForRepresentation:representation ofEntity:entity fromResponse:operation.response];
                         NSDictionary *relationshipRepresentations = [self.HTTPClient representationsForRelationshipsFromRepresentation:representation ofEntity:entity fromResponse:operation.response];
                         
-                        NSManagedObjectID *objectID = [self objectIDForBackingObjectForEntity:entity withResourceIdentifier:resourceIdentifier];
+                        NSManagedObjectID *backingObjectID = [self objectIDForBackingObjectForEntity:entity
+                                                                              withResourceIdentifier:resourceIdentifier];
                         
-                        NSManagedObject *backingObject = (objectID != nil) ? [backingContext existingObjectWithID:objectID error:nil] : [NSEntityDescription insertNewObjectForEntityForName:entity.name inManagedObjectContext:backingContext];
-                        [backingObject setValue:resourceIdentifier forKey:kAFIncrementalStoreResourceIdentifierAttributeName];
-                        [backingObject setValuesForKeysWithDictionary:attributes];
-                                                
-                        NSManagedObject *managedObject = [childContext existingObjectWithID:[self objectIDForEntity:entity withResourceIdentifier:resourceIdentifier] error:nil];
-                        [managedObject setValuesForKeysWithDictionary:attributes];
-                        if (objectID == nil) {
-                            [childContext insertObject:managedObject];
+                        NSManagedObject *backingObject = nil;
+                        if(nil == backingObjectID) {
+                          backingObject  = [NSEntityDescription insertNewObjectForEntityForName:entity.name
+                                                                       inManagedObjectContext:backingContext];
+                        } else {
+                          backingObject = [backingContext existingObjectWithID:backingObjectID
+                                                                       error:nil];
                         }
+                        [backingObject setValue:resourceIdentifier
+                                         forKey:kAFIncrementalStoreResourceIdentifierAttributeName];
+                        [backingObject setValuesForKeysWithDictionary:attributes];
+                                                  
+                        //either get the existing or create a new one
+                        NSManagedObjectID* childObjectID = [self objectIDForEntity:entity
+                                                          withResourceIdentifier:resourceIdentifier];
+                        //either get existing or create a new one
+                        NSManagedObject *childObject = [childContext objectWithID:childObjectID];
+                        //if the backingObjectID is nil, there should also be no object in the client's context
+                        //so insert it
+                        if (backingObjectID == nil) {
+                            [childContext insertObject:childObject];
+                        }
+                        [childObject setValuesForKeysWithDictionary:attributes];
                         
                         for (NSString *relationshipName in relationshipRepresentations) {
                             id relationshipRepresentationOrArrayOfRepresentations = [relationshipRepresentations objectForKey:relationshipName];
@@ -207,7 +222,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                                     }
                                     
                                     [backingObject setValue:mutableBackingRelationshipObjects forKey:relationship.name];
-                                    [managedObject setValue:mutableManagedRelationshipObjects forKey:relationship.name];
+                                    [childObject setValue:mutableManagedRelationshipObjects forKey:relationship.name];
                                 } else {
                                     NSString *relationshipResourceIdentifier = [self.HTTPClient resourceIdentifierForRepresentation:relationshipRepresentationOrArrayOfRepresentations ofEntity:relationship.destinationEntity fromResponse:operation.response];
                                     NSDictionary *relationshipAttributes = [self.HTTPClient attributesForRepresentation:relationshipRepresentationOrArrayOfRepresentations ofEntity:relationship.destinationEntity fromResponse:operation.response];
@@ -221,7 +236,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                                     
                                     NSManagedObject *managedRelationshipObject = [childContext existingObjectWithID:[self objectIDForEntity:relationship.destinationEntity withResourceIdentifier:relationshipResourceIdentifier] error:nil];
                                     [managedRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
-                                    [managedObject setValue:managedRelationshipObject forKey:relationship.name];
+                                    [childObject setValue:managedRelationshipObject forKey:relationship.name];
                                     if (relationshipObjectID == nil) {
                                         [childContext insertObject:managedRelationshipObject];
                                     }
