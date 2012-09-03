@@ -125,8 +125,8 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
 
 - (NSManagedObjectContext*) automergingChildContextFromParentContext:(NSManagedObjectContext*) context {
   NSManagedObjectContext* childContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-  childContext.parentContext = context;
   childContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy;
+  childContext.persistentStoreCoordinator = context.persistentStoreCoordinator;
   
   [[NSNotificationCenter defaultCenter] addObserverForName:NSManagedObjectContextDidSaveNotification
                                                     object:childContext
