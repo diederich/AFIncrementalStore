@@ -282,10 +282,17 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     return nil;
     
     _error: {
-        NSMutableDictionary *mutableUserInfo = [NSMutableDictionary dictionary];
-        [mutableUserInfo setValue:[NSString stringWithFormat:NSLocalizedString(@"Unsupported NSFetchRequestResultType, %d", nil), persistentStoreRequest.requestType] forKey:NSLocalizedDescriptionKey];
         if (error) {
-            *error = [[NSError alloc] initWithDomain:AFNetworkingErrorDomain code:0 userInfo:mutableUserInfo];
+          NSMutableDictionary *mutableUserInfo = [NSMutableDictionary dictionary];
+          NSString* errorDescription = [NSString stringWithFormat:
+                                        NSLocalizedString(@"Unsupported NSFetchRequestResultType, %d", nil),
+                                        persistentStoreRequest.requestType];
+          [mutableUserInfo setValue:errorDescription
+                             forKey:NSLocalizedDescriptionKey];
+
+            *error = [[NSError alloc] initWithDomain:AFNetworkingErrorDomain
+                                                code:0
+                                            userInfo:mutableUserInfo];
         }
     
         return nil;
