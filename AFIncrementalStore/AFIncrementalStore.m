@@ -255,7 +255,8 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                 results = [backingContext executeFetchRequest:fetchRequest error:error];
                 NSMutableArray *mutableObjects = [NSMutableArray arrayWithCapacity:[results count]];
                 for (NSString *resourceIdentifier in [results valueForKeyPath:kAFIncrementalStoreResourceIdentifierAttributeName]) {
-                    NSManagedObjectID *objectID = [self objectIDForEntity:fetchRequest.entity withResourceIdentifier:resourceIdentifier];
+                    NSManagedObjectID *objectID = [self objectIDForEntity:fetchRequest.entity
+                                                   withResourceIdentifier:resourceIdentifier];
                     NSManagedObject *object = [context objectWithID:objectID];
                     [mutableObjects addObject:object];
                 }
@@ -302,8 +303,12 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     fetchRequest.resultType = NSDictionaryResultType;
     fetchRequest.fetchLimit = 1;
     fetchRequest.includesSubentities = NO;
-    fetchRequest.propertiesToFetch = [[[NSEntityDescription entityForName:fetchRequest.entityName inManagedObjectContext:context] attributesByName] allKeys];
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K = %@", kAFIncrementalStoreResourceIdentifierAttributeName, [self referenceObjectForObjectID:objectID]];
+    fetchRequest.propertiesToFetch = [[[NSEntityDescription entityForName:fetchRequest.entityName
+                                                   inManagedObjectContext:context]
+                                       attributesByName] allKeys];
+    id referenceObject = [self referenceObjectForObjectID:objectID];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K = %@",
+                              kAFIncrementalStoreResourceIdentifierAttributeName, referenceObject];
     
     //fetch from the backing store
     NSArray *results = [[self backingManagedObjectContext] executeFetchRequest:fetchRequest error:error];
@@ -392,7 +397,8 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                         [backingRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                         [mutableBackingRelationshipObjects addObject:backingRelationshipObject];
 
-                        NSManagedObject *managedRelationshipObject = [childContext existingObjectWithID:[self objectIDForEntity:relationship.destinationEntity withResourceIdentifier:relationshipResourceIdentifier] error:nil];
+                        NSManagedObject *managedRelationshipObject = [childContext objectWithID:[self objectIDForEntity:relationship.destinationEntity
+                                                                                                 withResourceIdentifier:relationshipResourceIdentifier]];
                         [managedRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                         [mutableManagedRelationshipObjects addObject:managedRelationshipObject];
                         if (relationshipObjectID == nil) {
@@ -421,7 +427,8 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
         }
     }
     
-    NSManagedObjectID *backingObjectID = [self objectIDForBackingObjectForEntity:[objectID entity] withResourceIdentifier:[self referenceObjectForObjectID:objectID]];
+    NSManagedObjectID *backingObjectID = [self objectIDForBackingObjectForEntity:[objectID entity]
+                                                          withResourceIdentifier:[self referenceObjectForObjectID:objectID]];
     NSManagedObject *backingObject = (backingObjectID == nil) ? nil : [[self backingManagedObjectContext] existingObjectWithID:backingObjectID error:nil];
     
     if (backingObject && ![backingObject hasChanges]) {
