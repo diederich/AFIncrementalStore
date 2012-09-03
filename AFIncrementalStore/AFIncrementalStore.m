@@ -322,9 +322,14 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     if(nil == results) {
       NSLog(@"Error: Failed to fetch values from backingContext for object with id: '%@'. Error: %@", objectID, (error) ? *error : nil);
     }
+  
+    //return nil of we can't find the an object with the given ID
+    if(0 == [results count]) {
+      return nil;
+    }
 
     //build NSIncrementalStoreNode that we need to return from the fetched data
-    NSDictionary *attributeValues = [results lastObject] ?: [NSDictionary dictionary];
+    NSDictionary *attributeValues = [results lastObject];
     NSIncrementalStoreNode *node = [[NSIncrementalStoreNode alloc] initWithObjectID:objectID
                                                                          withValues:attributeValues
                                                                             version:1];
