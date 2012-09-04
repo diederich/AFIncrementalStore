@@ -412,9 +412,6 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                 }
                 
                 [childContext performBlock:^{
-                    NSManagedObject *managedObject = [childContext existingObjectWithID:[self objectIDForEntity:[objectID entity] withResourceIdentifier:[self referenceObjectForObjectID:objectID]] error:nil];
-                    NSManagedObject *backingObject = [backingContext existingObjectWithID:[self objectIDForBackingObjectForEntity:[objectID entity] withResourceIdentifier:[self referenceObjectForObjectID:objectID]] error:nil];
-
                     id mutableBackingRelationshipObjects = [relationship isOrdered] ? [NSMutableOrderedSet orderedSetWithCapacity:[representations count]] : [NSMutableSet setWithCapacity:[representations count]];
                     id mutableManagedRelationshipObjects = [relationship isOrdered] ? [NSMutableOrderedSet orderedSetWithCapacity:[representations count]] : [NSMutableSet setWithCapacity:[representations count]];
 
@@ -444,6 +441,9 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                             [childContext insertObject:managedRelationshipObject];
                         }
                     }
+                  
+                    NSManagedObject *managedObject = [childContext existingObjectWithID:objectID error:nil];
+                    NSManagedObject *backingObject = [backingContext existingObjectWithID:[self objectIDForBackingObjectForEntity:[objectID entity] withResourceIdentifier:[self referenceObjectForObjectID:objectID]] error:nil];
                     
                     if ([relationship isToMany]) {
                         [managedObject setValue:mutableManagedRelationshipObjects forKey:relationship.name];
