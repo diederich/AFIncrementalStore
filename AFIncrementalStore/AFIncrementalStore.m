@@ -433,13 +433,17 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                         [backingRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                         [mutableBackingRelationshipObjects addObject:backingRelationshipObject];
 
-                        NSManagedObject *managedRelationshipObject = [childContext objectWithID:[self objectIDForEntity:relationship.destinationEntity
-                                                                                                 withResourceIdentifier:relationshipResourceIdentifier]];
-                        [managedRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
-                        [mutableManagedRelationshipObjects addObject:managedRelationshipObject];
+                        NSManagedObjectID* managedObjectID = [self objectIDForEntity:entity
+                                                              withResourceIdentifier:relationshipResourceIdentifier];
+                        //either get existing or create a new one
+                        NSManagedObject *managedRelationshipObject = [childContext objectWithID:managedObjectID];
+                        //if the backingObjectID is nil, there should also be no object in the client's context
+                        //so insert it
                         if (relationshipObjectID == nil) {
                             [childContext insertObject:managedRelationshipObject];
                         }
+                        [mutableManagedRelationshipObjects addObject:managedRelationshipObject];
+                        [managedRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                     }
                   
                     NSManagedObject *managedObject = [childContext existingObjectWithID:objectID error:nil];
