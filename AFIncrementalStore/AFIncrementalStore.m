@@ -388,8 +388,13 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                   withContext:(NSManagedObjectContext *)context
                         error:(NSError *__autoreleasing *)error
 {
-    if ([self.HTTPClient respondsToSelector:@selector(shouldFetchRemoteValuesForRelationship:forObjectWithID:inManagedObjectContext:)] && [self.HTTPClient shouldFetchRemoteValuesForRelationship:relationship forObjectWithID:objectID inManagedObjectContext:context]) {
-        NSURLRequest *request = [self.HTTPClient requestWithMethod:@"GET" pathForRelationship:relationship forObjectWithID:objectID withContext:context];
+    if ([self.HTTPClient respondsToSelector:@selector(shouldFetchRemoteValuesForRelationship:forObjectWithID:inManagedObjectContext:)]
+        && [self.HTTPClient shouldFetchRemoteValuesForRelationship:relationship forObjectWithID:objectID inManagedObjectContext:context]) {
+        
+        NSURLRequest *request = [self.HTTPClient requestWithMethod:@"GET"
+                                               pathForRelationship:relationship
+                                                   forObjectWithID:objectID
+                                                       withContext:context];
         
         if ([request URL] && ![[context existingObjectWithID:objectID error:nil] hasChanges]) {
             
@@ -416,12 +421,18 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                     NSEntityDescription *entity = relationship.destinationEntity;
                     
                     for (NSDictionary *representation in representations) {
-                        NSString *relationshipResourceIdentifier = [self.HTTPClient resourceIdentifierForRepresentation:representation ofEntity:entity fromResponse:operation.response];
-
-                        NSManagedObjectID *relationshipObjectID = [self objectIDForBackingObjectForEntity:relationship.destinationEntity withResourceIdentifier:relationshipResourceIdentifier];
-                        NSDictionary *relationshipAttributes = [self.HTTPClient attributesForRepresentation:representation ofEntity:entity fromResponse:operation.response];
-                        
-                        NSManagedObject *backingRelationshipObject = (relationshipObjectID != nil) ? [backingContext existingObjectWithID:relationshipObjectID error:nil] : [NSEntityDescription insertNewObjectForEntityForName:[relationship.destinationEntity name] inManagedObjectContext:backingContext];
+                        NSString *relationshipResourceIdentifier = [self.HTTPClient resourceIdentifierForRepresentation:representation
+                                                                                                               ofEntity:entity
+                                                                                                           fromResponse:operation.response];
+                        NSManagedObjectID *relationshipObjectID = [self objectIDForBackingObjectForEntity:relationship.destinationEntity
+                                                                                   withResourceIdentifier:relationshipResourceIdentifier];
+                        NSDictionary *relationshipAttributes = [self.HTTPClient attributesForRepresentation:representation
+                                                                                                   ofEntity:entity
+                                              
+                                                                                               fromResponse:operation.response];
+                        NSManagedObject *backingRelationshipObject = (relationshipObjectID != nil) ?
+                          [backingContext existingObjectWithID:relationshipObjectID error:nil] :
+                          [NSEntityDescription insertNewObjectForEntityForName:[relationship.destinationEntity name] inManagedObjectContext:backingContext];
                         [backingRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                         [mutableBackingRelationshipObjects addObject:backingRelationshipObject];
 
