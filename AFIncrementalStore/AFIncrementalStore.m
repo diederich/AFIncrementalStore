@@ -28,7 +28,7 @@ NSString * AFIncrementalStoreUnimplementedMethodException = @"com.alamofire.incr
 static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"__af_resourceIdentifier";
 
 @interface AFIncrementalStore ()
-
+@property (atomic, assign) BOOL isSaving;
 - (NSManagedObjectContext *)backingManagedObjectContext;
 
 - (NSManagedObjectID *)objectIDForEntity:(NSEntityDescription *)entity
@@ -133,7 +133,9 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                                                      queue:[NSOperationQueue mainQueue]
                                                 usingBlock:^(NSNotification *note) {
                                                   NSManagedObjectContext* ctx = parentContext;
+                                                  self.isSaving = YES;
                                                   [ctx mergeChangesFromContextDidSaveNotification:note];
+                                                  self.isSaving = NO;
                                                 }];
   return childContext;
 }
@@ -396,7 +398,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                                                    forObjectWithID:objectID
                                                        withContext:context];
         
-        if ([request URL] && ![[context existingObjectWithID:objectID error:nil] hasChanges]) {
+        if (!self.isSaving && [request URL] && ![[context existingObjectWithID:objectID error:nil] hasChanges]) {
             
             NSManagedObjectContext *backingContext = [self backingManagedObjectContext];
             NSManagedObjectContext *childContext = [self automergingChildContextFromParentContext:context];
