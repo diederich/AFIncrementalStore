@@ -430,6 +430,7 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
                         NSManagedObject *backingRelationshipObject = (relationshipObjectID != nil) ?
                           [backingContext existingObjectWithID:relationshipObjectID error:nil] :
                           [NSEntityDescription insertNewObjectForEntityForName:[relationship.destinationEntity name] inManagedObjectContext:backingContext];
+                        [backingRelationshipObject setValue:relationshipResourceIdentifier forKey:kAFIncrementalStoreResourceIdentifierAttributeName];
                         [backingRelationshipObject setValuesForKeysWithDictionary:relationshipAttributes];
                         [mutableBackingRelationshipObjects addObject:backingRelationshipObject];
 
