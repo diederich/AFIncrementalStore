@@ -472,6 +472,9 @@ static NSString * const kAFIncrementalStoreResourceIdentifierAttributeName = @"_
     
     NSManagedObjectID *backingObjectID = [self objectIDForBackingObjectForEntity:[objectID entity]
                                                           withResourceIdentifier:[self referenceObjectForObjectID:objectID]];
+    if (nil == backingObjectID) {
+      return nil;
+    }
     NSManagedObject *backingObject = (backingObjectID == nil) ? nil : [[self backingManagedObjectContext] existingObjectWithID:backingObjectID error:nil];
     
     if (backingObject && ![backingObject hasChanges]) {
